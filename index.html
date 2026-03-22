@@ -171,16 +171,166 @@ canvas#network { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-
 <div class="footer"><span>Mohamed HASNIOUI — Paris, France — 2026</span></div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-const canvas=document.getElementById('network'),ctx=canvas.getContext('2d');let w,h,nodes=[],mouse={x:-1e3,y:-1e3};
-function resize(){w=canvas.width=window.innerWidth;h=canvas.height=document.body.scrollHeight;initNodes()}
-function initNodes(){nodes=[];const s=120;for(let i=-1;i<Math.ceil(w/s)+2;i++)for(let j=-1;j<Math.ceil(h/s)+2;j++)nodes.push({baseX:i*s+(Math.random()-.5)*55,baseY:j*s+(Math.random()-.5)*45,x:0,y:0,r:Math.random()*1.4+.7})}
-function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-function draw(){ctx.clearRect(0,0,w,h);const t=Date.now()*.00025,sy=window.scrollY;
-for(const n of nodes){const wave=Math.sin(n.baseX*.005+t)*10+Math.cos(n.baseY*.006+t*.8)*7;n.x=n.baseX+Math.sin(t*1.2+n.baseX*.002)*2.5;n.y=n.baseY+wave-sy;const md=dist(n,mouse);if(md<140){const f=(140-md)/140*7,a=Math.atan2(n.y-mouse.y,n.x-mouse.x);n.x+=Math.cos(a)*f;n.y+=Math.sin(a)*f}}
-const vh=window.innerHeight;for(let i=0;i<nodes.length;i++){if(nodes[i].y<-80||nodes[i].y>vh+80)continue;for(let j=i+1;j<nodes.length;j++){if(nodes[j].y<-80||nodes[j].y>vh+80)continue;const d=dist(nodes[i],nodes[j]);if(d<125){ctx.beginPath();ctx.moveTo(nodes[i].x,nodes[i].y);ctx.lineTo(nodes[j].x,nodes[j].y);ctx.strokeStyle=`rgba(74,127,255,${(1-d/125)*.1})`;ctx.lineWidth=.5;ctx.stroke()}}}
-for(const n of nodes){if(n.y<-50||n.y>vh+50)continue;const md=dist(n,mouse),gl=md<180?(180-md)/180*.35:0;ctx.beginPath();ctx.arc(n.x,n.y,n.r+gl*2,0,Math.PI*2);ctx.fillStyle=`rgba(74,127,255,${.12+gl})`;ctx.fill()}
-requestAnimationFrame(draw)}
-window.addEventListener('resize',resize);window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});window.addEventListener('mouseleave',()=>{mouse.x=-1e3;mouse.y=-1e3});resize();draw();
+const canvas=document.getElementById('network'),ctx=canvas.getContext('2d');
+let w,h,particles=[],mouse={x:-1e3,y:-1e3,active:false};
+
+function resize(){
+  w=canvas.width=window.innerWidth;
+  h=canvas.height=window.innerHeight;
+  initParticles();
+}
+
+function initParticles(){
+  particles=[];
+  const count=Math.floor((w*h)/8000);
+  for(let i=0;i<count;i++){
+    const depth=Math.random();
+    particles.push({
+      x:Math.random()*w,
+      y:Math.random()*h,
+      baseX:0,baseY:0,
+      vx:(Math.random()-.5)*.3*(1-depth*.6),
+      vy:(Math.random()-.5)*.3*(1-depth*.6),
+      r:1+depth*2.5,
+      depth:depth,
+      opacity:.06+depth*.2,
+      pulse:Math.random()*Math.PI*2
+    });
+    particles[particles.length-1].baseX=particles[particles.length-1].x;
+    particles[particles.length-1].baseY=particles[particles.length-1].y;
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  const t=Date.now()*.001;
+  const sy=window.scrollY;
+  const mouseRadius=200;
+  const connectDist=150;
+
+  for(const p of particles){
+    p.pulse+=.008+p.depth*.005;
+    const drift=Math.sin(t*.4+p.baseX*.003)*(.5+p.depth*1.5);
+    const drift2=Math.cos(t*.3+p.baseY*.004)*(.4+p.depth*1.2);
+    p.x+=p.vx+drift*.02;
+    p.y+=p.vy+drift2*.02;
+
+    const parallax=sy*p.depth*.15;
+    const drawY=p.y-parallax;
+
+    if(p.x<-20)p.x=w+20;
+    if(p.x>w+20)p.x=-20;
+    if(p.y<-20)p.y=h+20;
+    if(p.y>h+20)p.y=-20;
+
+    p.drawX=p.x;
+    p.drawY=drawY;
+
+    if(mouse.active){
+      const dx=p.drawX-mouse.x,dy=p.drawY-mouse.y;
+      const md=Math.sqrt(dx*dx+dy*dy);
+      if(md<mouseRadius){
+        const force=(mouseRadius-md)/mouseRadius;
+        const angle=Math.atan2(dy,dx);
+        const push=force*force*25*p.depth;
+        p.drawX+=Math.cos(angle)*push;
+        p.drawY+=Math.sin(angle)*push;
+      }
+    }
+  }
+
+  if(mouse.active){
+    for(const p of particles){
+      const dx=p.drawX-mouse.x,dy=p.drawY-mouse.y;
+      const md=Math.sqrt(dx*dx+dy*dy);
+      if(md<mouseRadius){
+        const alpha=(1-md/mouseRadius)*.4*p.depth;
+        ctx.beginPath();
+        ctx.moveTo(mouse.x,mouse.y);
+        ctx.lineTo(p.drawX,p.drawY);
+        ctx.strokeStyle=`rgba(100,160,255,${alpha})`;
+        ctx.lineWidth=.8*p.depth;
+        ctx.stroke();
+      }
+    }
+  }
+
+  for(let i=0;i<particles.length;i++){
+    const a=particles[i];
+    if(a.drawY<-50||a.drawY>h+50)continue;
+    for(let j=i+1;j<particles.length;j++){
+      const b=particles[j];
+      if(b.drawY<-50||b.drawY>h+50)continue;
+      const dx=a.drawX-b.drawX,dy=a.drawY-b.drawY;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      const maxD=connectDist*(a.depth+b.depth)*.6;
+      if(d<maxD){
+        const alpha=(1-d/maxD)*.12*Math.min(a.depth,b.depth);
+        ctx.beginPath();
+        ctx.moveTo(a.drawX,a.drawY);
+        ctx.lineTo(b.drawX,b.drawY);
+        ctx.strokeStyle=`rgba(74,127,255,${alpha})`;
+        ctx.lineWidth=.4+Math.min(a.depth,b.depth)*.4;
+        ctx.stroke();
+      }
+    }
+  }
+
+  for(const p of particles){
+    if(p.drawY<-50||p.drawY>h+50)continue;
+    let glow=0,glowColor=false;
+    if(mouse.active){
+      const dx=p.drawX-mouse.x,dy=p.drawY-mouse.y;
+      const md=Math.sqrt(dx*dx+dy*dy);
+      if(md<mouseRadius){
+        glow=(1-md/mouseRadius)*p.depth;
+        glowColor=true;
+      }
+    }
+    const pulseSize=Math.sin(p.pulse)*.3*p.depth;
+    const size=p.r+pulseSize+glow*3;
+    const alpha=p.opacity+glow*.5+Math.sin(p.pulse)*.03;
+
+    if(glowColor&&glow>.2){
+      ctx.beginPath();
+      ctx.arc(p.drawX,p.drawY,size*3,0,Math.PI*2);
+      ctx.fillStyle=`rgba(100,160,255,${glow*.06})`;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(p.drawX,p.drawY,size,0,Math.PI*2);
+    if(glowColor){
+      const r=74+Math.floor(glow*80);
+      const g=127+Math.floor(glow*60);
+      const b2=255;
+      ctx.fillStyle=`rgba(${r},${g},${b2},${Math.min(1,alpha)})`;
+    }else{
+      ctx.fillStyle=`rgba(74,127,255,${alpha})`;
+    }
+    ctx.fill();
+  }
+
+  if(mouse.active){
+    ctx.beginPath();
+    ctx.arc(mouse.x,mouse.y,3,0,Math.PI*2);
+    ctx.fillStyle='rgba(100,160,255,0.4)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(mouse.x,mouse.y,8,0,Math.PI*2);
+    ctx.fillStyle='rgba(100,160,255,0.06)';
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('resize',resize);
+window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true});
+window.addEventListener('mouseleave',()=>{mouse.active=false});
+window.addEventListener('touchmove',e=>{mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;mouse.active=true});
+window.addEventListener('touchend',()=>{mouse.active=false});
+resize();draw();
 
 document.querySelectorAll('.reveal').forEach(el=>new IntersectionObserver(([e])=>{if(e.isIntersecting)el.classList.add('visible')},{threshold:.15}).observe(el));
 
