@@ -114,7 +114,7 @@ canvas#network { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
         LinkedIn
       </a>
-      <a href="mailto:mohamedhasnioui3@gmail.com">
+      <a href="/cdn-cgi/l/email-protection#c5a8aaada4a8a0a1ada4b6abacaab0acf685a2a8a4aca9eba6aaa8">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
         Email
       </a>
@@ -170,7 +170,7 @@ canvas#network { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-
 
 <div class="footer"><span>Mohamed HASNIOUI — Paris, France — 2026</span></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const canvas=document.getElementById('network'),ctx=canvas.getContext('2d');let w,h,nodes=[],mouse={x:-1e3,y:-1e3};
 function resize(){w=canvas.width=window.innerWidth;h=canvas.height=document.body.scrollHeight;initNodes()}
 function initNodes(){nodes=[];const s=120;for(let i=-1;i<Math.ceil(w/s)+2;i++)for(let j=-1;j<Math.ceil(h/s)+2;j++)nodes.push({baseX:i*s+(Math.random()-.5)*55,baseY:j*s+(Math.random()-.5)*45,x:0,y:0,r:Math.random()*1.4+.7})}
@@ -191,10 +191,8 @@ window.exportLeads=function(){const l=JSON.parse(localStorage.getItem('mh_leads'
 form.addEventListener('submit',async e=>{e.preventDefault();submitBtn.disabled=true;submitBtn.textContent='Envoi en cours...';
 const d={name:form.name.value.trim(),company:form.company.value.trim(),email:form.email.value.trim(),phone:form.phone.value.trim(),website:form.website.value.trim(),service:form.service.value,message:form.message.value.trim()};
 saveLeadLocally(d);
-try{await fetch('https://formspree.io/f/YOUR_FORM_ID',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(d)})}catch(err){console.log('Lead sauvé localement')}
-form.style.display='none';document.getElementById('formSuccess').classList.add('active');
-const s=encodeURIComponent('Demande audit — '+d.company),b=encodeURIComponent('Nom: '+d.name+'\nEntreprise: '+d.company+'\nEmail: '+d.email+'\nTéléphone: '+d.phone+'\nSite: '+d.website+'\nService: '+d.service+'\n\nMessage:\n'+d.message);
-setTimeout(()=>{window.location.href='mailto:mohamedhasnioui3@gmail.com?subject='+s+'&body='+b},1500)});
+try{const res=await fetch('https://formspree.io/f/xpqygaly',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(d)});if(res.ok){console.log('Lead envoyé via Formspree')}else{console.log('Erreur Formspree:',res.status)}}catch(err){console.log('Erreur réseau — lead sauvé localement')}
+form.style.display='none';document.getElementById('formSuccess').classList.add('active')});
 </script>
 </body>
 </html>
