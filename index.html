@@ -114,7 +114,7 @@ canvas#network { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
         LinkedIn
       </a>
-      <a href="/cdn-cgi/l/email-protection#c5a8aaada4a8a0a1ada4b6abacaab0acf685a2a8a4aca9eba6aaa8">
+      <a id="email-link" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
         Email
       </a>
@@ -170,7 +170,7 @@ canvas#network { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-
 
 <div class="footer"><span>Mohamed HASNIOUI — Paris, France — 2026</span></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const canvas=document.getElementById('network'),ctx=canvas.getContext('2d');
 let w,h,particles=[],mouse={x:-1e3,y:-1e3,active:false};
 
@@ -331,6 +331,9 @@ window.addEventListener('mouseleave',()=>{mouse.active=false});
 window.addEventListener('touchmove',e=>{mouse.x=e.touches[0].clientX;mouse.y=e.touches[0].clientY;mouse.active=true});
 window.addEventListener('touchend',()=>{mouse.active=false});
 resize();draw();
+
+// Build email dynamically to prevent Cloudflare encoding
+(function(){var u='mohamedhasnioui3';var d='gmail.com';var e=u+'@'+d;document.getElementById('email-link').href='mai'+'lto:'+e;})();
 
 document.querySelectorAll('.reveal').forEach(el=>new IntersectionObserver(([e])=>{if(e.isIntersecting)el.classList.add('visible')},{threshold:.15}).observe(el));
 
